@@ -448,6 +448,9 @@ static constexpr int kNumProfilerSamplesPerSec = 5;
 - (FlutterMethodChannel*)platformChannel {
   return _platformChannel.get();
 }
+- (FlutterMethodChannel*)platformViewsChannel {
+  return _platformViewsChannel.get();
+}
 - (FlutterMethodChannel*)textInputChannel {
   return _textInputChannel.get();
 }
@@ -955,6 +958,17 @@ static void SetEntryPoint(flutter::Settings* settings, NSString* entrypoint, NSS
        removeTextPlaceholder:(int)client {
   [_textInputChannel.get() invokeMethod:@"TextInputClient.removeTextPlaceholder"
                               arguments:@[ @(client) ]];
+}
+
+- (void)flutterTextInputViewDidResignFirstResponder:(FlutterTextInputView *)textInputView {
+
+  dispatch_async(dispatch_get_main_queue(), ^(void){
+    self.platformViewsController->checkFirstResponder();
+  });
+//  if (self.platformViewsController->hasFirstResponder()) {
+//    NSLog(@"hasFirstResponder returns true");
+//    [self.textInputPlugin hideTextInput2];
+//  }
 }
 
 #pragma mark - Screenshot Delegate

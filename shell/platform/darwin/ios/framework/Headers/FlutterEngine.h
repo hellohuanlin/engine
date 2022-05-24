@@ -360,6 +360,7 @@ FLUTTER_DARWIN_EXPORT
  */
 @property(nonatomic, readonly) FlutterMethodChannel* platformChannel;
 
+@property(nonatomic, readonly) FlutterMethodChannel* platformViewsChannel;
 /**
  * The `FlutterMethodChannel` used to communicate text input events to the
  * Dart Isolate.

@@ -107,7 +107,6 @@ typedef NS_ENUM(NSInteger, FlutterScribbleInteractionStatus) {
                       containsStart:(BOOL)containsStart
                         containsEnd:(BOOL)containsEnd
                          isVertical:(BOOL)isVertical;
-
 - (instancetype)init NS_UNAVAILABLE;
 @end
 

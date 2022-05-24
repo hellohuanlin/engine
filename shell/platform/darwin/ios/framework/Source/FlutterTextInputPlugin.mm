@@ -39,6 +39,7 @@ const CGRect kSpacePanBounds = {{-2500, -2500}, {5000, 5000}};
 static NSString* const kShowMethod = @"TextInput.show";
 static NSString* const kHideMethod = @"TextInput.hide";
 static NSString* const kSetClientMethod = @"TextInput.setClient";
+static NSString* const kSetPlatformViewClientMethod = @"TextInput.setPlatformViewClient";
 static NSString* const kSetEditingStateMethod = @"TextInput.setEditingState";
 static NSString* const kClearClientMethod = @"TextInput.clearClient";
 static NSString* const kSetEditableSizeAndTransformMethod =
@@ -1074,6 +1075,23 @@ static BOOL IsSelectionRectCloserToPoint(CGPoint point,
   return _textInputClient != 0;
 }
 
+- (BOOL)resignFirstResponder {
+  NSLog(@"resignFirstResponder called");
+  BOOL success = [super resignFirstResponder];
+  if (success) {
+    [self.textInputDelegate flutterTextInputViewDidResignFirstResponder:self];
+  }
+  return success;
+//  FlutterTextInputView* __weak weakSelf = self;
+//  dispatch_async(dispatch_get_main_queue(), ^(void){
+  //  FlutterTextInputView* strongSelf = weakSelf;
+    //if (strongSelf) {
+      //[strongSelf.textInputDelegate flutterTextInputViewDidResignFirstResponder:strongSelf];
+    //}
+//    [self.textInputDelegate flutterTextInputViewDidResignFirstResponder:self];
+//  });
+}
+
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
   // When scribble is available, the FlutterTextInputView will display the native toolbar unless
   // these text editing actions are disabled.
@@ -2070,6 +2088,9 @@ static BOOL IsSelectionRectCloserToPoint(CGPoint point,
   } else if ([method isEqualToString:kSetClientMethod]) {
     [self setTextInputClient:[args[0] intValue] withConfiguration:args[1]];
     result(nil);
+  } else if ([method isEqualToString:kSetPlatformViewClientMethod]) {
+    [self setPlatformViewTextInputClient:[args[@"platformViewId"] longValue]];
+    result(nil);
   } else if ([method isEqualToString:kSetEditingStateMethod]) {
     [self setTextInputEditingState:args];
     result(nil);
@@ -2184,6 +2205,18 @@ static BOOL IsSelectionRectCloserToPoint(CGPoint point,
 
   [self cleanUpViewHierarchy:YES clearText:!saveEntries delayRemoval:NO];
   [self addToInputParentViewIfNeeded:_activeView];
+}
+
+- (void)setPlatformViewTextInputClient:(long)platformViewID {
+//  [self resetAllClientIds];
+//  [self changeInputViewsAutofillVisibility:NO];
+//  [_activeView setTextInputClient:platformViewID];
+//  [_activeView reloadInputViews];
+
+  [self removeEnableFlutterTextInputViewAccessibilityTimer];
+  _activeView.accessibilityEnabled = NO;
+  [_activeView removeFromSuperview];
+  [_inputHider removeFromSuperview];
 }
 
 - (void)setTextInputClient:(int)client withConfiguration:(NSDictionary*)configuration {

@@ -177,6 +177,10 @@ class FlutterPlatformViewsController {
 
   void OnMethodCall(FlutterMethodCall* call, FlutterResult& result);
 
+
+  void checkFirstResponder();
+
+
  private:
   static const size_t kMaxLayerAllocations = 2;
 
@@ -314,6 +318,7 @@ class FlutterPlatformViewsController {
 // 2. Dispatching all events that are hittested to the embedded view to the FlutterView.
 @interface FlutterTouchInterceptingView : UIView
 - (instancetype)initWithEmbeddedView:(UIView*)embeddedView
+                              viewId:(long)viewId
              platformViewsController:
                  (fml::WeakPtr<flutter::FlutterPlatformViewsController>)platformViewsController
     gestureRecognizersBlockingPolicy:

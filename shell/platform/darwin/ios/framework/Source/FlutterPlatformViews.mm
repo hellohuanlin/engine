@@ -19,6 +19,26 @@
 #import "flutter/shell/platform/darwin/ios/ios_surface.h"
 #import "flutter/shell/platform/darwin/ios/ios_surface_gl.h"
 
+#import <objc/runtime.h>
+
+@interface UIView (KVO)
+@property (nonatomic, readonly) BOOL hasFirstResponderInViewTree;
+@end
+
+@implementation UIView (KVO)
+- (BOOL) hasFirstResponderInViewTree {
+  if (self.isFirstResponder) {
+    return YES;
+  }
+  for (UIView *subview in self.subviews) {
+    if (subview.hasFirstResponderInViewTree) {
+      return YES;
+    }
+  }
+  return NO;
+}
+@end
+
 namespace flutter {
 
 std::shared_ptr<FlutterPlatformViewLayer> FlutterPlatformViewLayerPool::GetLayer(
@@ -165,6 +185,7 @@ void FlutterPlatformViewsController::OnCreate(FlutterMethodCall* call, FlutterRe
 
   FlutterTouchInterceptingView* touch_interceptor = [[[FlutterTouchInterceptingView alloc]
                   initWithEmbeddedView:platform_view
+                                viewId:viewId
                platformViewsController:GetWeakPtr()
       gestureRecognizersBlockingPolicy:gesture_recognizers_blocking_policies[viewType]]
       autorelease];
@@ -288,6 +309,23 @@ PostPrerollResult FlutterPlatformViewsController::PostPrerollAction(
   raster_thread_merger->ExtendLeaseTo(kDefaultMergedLeaseDuration);
   return PostPrerollResult::kSuccess;
 }
+
+// TODO: rename to checkFirstResponder and report
+void FlutterPlatformViewsController::checkFirstResponder() {
+  for (auto const& [key, val] : root_views_) {
+    UIView *root_view = val.get();
+    if ([root_view hasFirstResponderInViewTree]) {
+
+      FlutterViewController *flutterViewController = (FlutterViewController *)getFlutterViewController();
+      if (flutterViewController) {
+        [flutterViewController sendPlatformViewDidBecameFirstResponder:key];
+      }
+
+      return;
+    }
+  }
+}
+
 
 void FlutterPlatformViewsController::PrerollCompositeEmbeddedView(
     int view_id,
@@ -736,8 +774,11 @@ void FlutterPlatformViewsController::ResetFrameState() {
   fml::scoped_nsobject<DelayingGestureRecognizer> _delayingRecognizer;
   FlutterPlatformViewGestureRecognizersBlockingPolicy _blockingPolicy;
   UIView* _embeddedView;
+  fml::WeakPtr<flutter::FlutterPlatformViewsController> _platformViewsController;
+  long _viewId;
 }
 - (instancetype)initWithEmbeddedView:(UIView*)embeddedView
+                              viewId:(long)viewId
              platformViewsController:
                  (fml::WeakPtr<flutter::FlutterPlatformViewsController>)platformViewsController
     gestureRecognizersBlockingPolicy:
@@ -751,6 +792,10 @@ void FlutterPlatformViewsController::ResetFrameState() {
 
     [self addSubview:embeddedView];
 
+    // std::move does not work
+    _platformViewsController = platformViewsController;
+    _viewId = viewId;
+
     ForwardingGestureRecognizer* forwardingRecognizer = [[[ForwardingGestureRecognizer alloc]
                  initWithTarget:self
         platformViewsController:std::move(platformViewsController)] autorelease];
@@ -763,9 +808,36 @@ void FlutterPlatformViewsController::ResetFrameState() {
 
     [self addGestureRecognizer:_delayingRecognizer.get()];
     [self addGestureRecognizer:forwardingRecognizer];
+
+    [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(didChangeFirstResponder:) name:@"didChangeFirstResponder" object:nil];
   }
   return self;
 }
+
+- (void)didChangeFirstResponder: (NSNotification *)notification {
+
+//  id oldView = notification.userInfo[NSKeyValueChangeOldKey];
+  id newView = notification.userInfo[@"responder"];
+
+//  if ([oldView isKindOfClass:UIView.class]) {
+//    if ([oldView isDescendantOfView:_embeddedView]) {
+//      FlutterViewController *flutterViewController = (FlutterViewController *)_platformViewsController->getFlutterViewController();
+//      if (flutterViewController) {
+//        [flutterViewController sendPlatformViewDidResignFirstResponder: _viewId];
+//      }
+//    }
+//  }
+
+  if ([newView isKindOfClass:UIView.class]) {
+    if ([newView isDescendantOfView:_embeddedView]) {
+      FlutterViewController *flutterViewController = (FlutterViewController *)_platformViewsController->getFlutterViewController();
+      if (flutterViewController) {
+       // [flutterViewController sendPlatformViewDidBecameFirstResponder:_viewId];
+      }
+    }
+  }
+}
+
 
 - (UIView*)embeddedView {
   return [[_embeddedView retain] autorelease];
@@ -803,15 +875,19 @@ void FlutterPlatformViewsController::ResetFrameState() {
 // view. Make the touch event method not call super will not pass the touches up to the parent view.
 // Hence we overide the touch event methods and do nothing.
 - (void)touchesBegan:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
+  NSLog(@"touchesBegan");
 }
 
 - (void)touchesMoved:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
+  NSLog(@"touchesMoved");
 }
 
 - (void)touchesCancelled:(NSSet<UITouch*>*)touches withEvent:(UIEvent*)event {
+  NSLog(@"touchesCancelled");
 }
 
 - (void)touchesEnded:(NSSet*)touches withEvent:(UIEvent*)event {
+  NSLog(@"touchesEnded");
 }
 
 @end
@@ -947,3 +1023,45 @@ void FlutterPlatformViewsController::ResetFrameState() {
   return YES;
 }
 @end
+
+
+
+@interface UIResponder (PostNotification)
+- (BOOL)customBecomeFirstResponder;
+@end
+
+@implementation UIResponder (PostNotification)
+
+- (BOOL)customBecomeFirstResponder {
+
+  NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+  userInfo[@"responder"] = self;
+
+  [NSNotificationCenter.defaultCenter postNotificationName:@"didChangeFirstResponder" object:self userInfo:userInfo];
+
+  return [self customBecomeFirstResponder];
+}
+
+/*
++ (void)load {
+  static dispatch_once_t onceToken;
+  dispatch_once(&onceToken, ^{
+    Class clazz = [self class];
+    SEL originalSelector = @selector(becomeFirstResponder);
+    SEL swizzledSelector = @selector(customBecomeFirstResponder);
+
+    Method originalMethod = class_getInstanceMethod(clazz, originalSelector);
+    Method swizzledMethod = class_getInstanceMethod(clazz, swizzledSelector);
+
+    IMP originalImp = method_getImplementation(originalMethod);
+    IMP swizzledImp = method_getImplementation(swizzledMethod);
+
+    class_replaceMethod(clazz, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
+    class_replaceMethod(clazz, originalSelector, swizzledImp, method_getTypeEncoding(swizzledMethod));
+
+  });
+}
+*/
+@end
+
+
