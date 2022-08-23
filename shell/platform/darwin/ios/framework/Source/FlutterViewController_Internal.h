@@ -47,8 +47,8 @@ extern NSNotificationName const FlutterViewControllerShowHomeIndicator;
 - (void)addInternalPlugins;
 - (void)deregisterNotifications;
 - (int32_t)accessibilityFlags;
-- (void)sendPlatformViewDidBecameFirstResponder: (long)view_id;
-- (void)sendPlatformViewDidResignFirstResponder: (long)view_id;
+- (void)sendPlatformViewDidBecameFirstResponder:(long)view_id;
+- (void)sendPlatformViewDidResignFirstResponder:(long)view_id;
 @end
 
 #endif  // FLUTTER_SHELL_PLATFORM_DARWIN_IOS_FRAMEWORK_SOURCE_FLUTTERVIEWCONTROLLER_INTERNAL_H_

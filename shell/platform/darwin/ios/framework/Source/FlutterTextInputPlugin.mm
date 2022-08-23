@@ -1082,14 +1082,14 @@ static BOOL IsSelectionRectCloserToPoint(CGPoint point,
     [self.textInputDelegate flutterTextInputViewDidResignFirstResponder:self];
   }
   return success;
-//  FlutterTextInputView* __weak weakSelf = self;
-//  dispatch_async(dispatch_get_main_queue(), ^(void){
+  //  FlutterTextInputView* __weak weakSelf = self;
+  //  dispatch_async(dispatch_get_main_queue(), ^(void){
   //  FlutterTextInputView* strongSelf = weakSelf;
-    //if (strongSelf) {
-      //[strongSelf.textInputDelegate flutterTextInputViewDidResignFirstResponder:strongSelf];
-    //}
-//    [self.textInputDelegate flutterTextInputViewDidResignFirstResponder:self];
-//  });
+  // if (strongSelf) {
+  //[strongSelf.textInputDelegate flutterTextInputViewDidResignFirstResponder:strongSelf];
+  //}
+  //    [self.textInputDelegate flutterTextInputViewDidResignFirstResponder:self];
+  //  });
 }
 
 - (BOOL)canPerformAction:(SEL)action withSender:(id)sender {
@@ -2208,10 +2208,10 @@ static BOOL IsSelectionRectCloserToPoint(CGPoint point,
 }
 
 - (void)setPlatformViewTextInputClient:(long)platformViewID {
-//  [self resetAllClientIds];
-//  [self changeInputViewsAutofillVisibility:NO];
-//  [_activeView setTextInputClient:platformViewID];
-//  [_activeView reloadInputViews];
+  //  [self resetAllClientIds];
+  //  [self changeInputViewsAutofillVisibility:NO];
+  //  [_activeView setTextInputClient:platformViewID];
+  //  [_activeView reloadInputViews];
 
   [self removeEnableFlutterTextInputViewAccessibilityTimer];
   _activeView.accessibilityEnabled = NO;

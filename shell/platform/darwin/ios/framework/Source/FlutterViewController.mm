@@ -900,11 +900,11 @@ static flutter::PointerData::DeviceKind DeviceKindFromTouchType(UITouch* touch) 
   return flutter::PointerData::DeviceKind::kTouch;
 }
 
-- (void)sendPlatformViewDidBecameFirstResponder: (long)view_id {
-  [[_engine.get() platformViewsChannel] invokeMethod:@"viewFocused" arguments: @(view_id)];
+- (void)sendPlatformViewDidBecameFirstResponder:(long)view_id {
+  [[_engine.get() platformViewsChannel] invokeMethod:@"viewFocused" arguments:@(view_id)];
 }
 
-- (void)sendPlatformViewDidResignFirstResponder: (long)view_id {
+- (void)sendPlatformViewDidResignFirstResponder:(long)view_id {
   NSLog(@"platform view did resign first responder with view_id: %ld", view_id);
 }
 

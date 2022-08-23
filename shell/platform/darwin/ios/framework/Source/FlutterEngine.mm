@@ -960,15 +960,14 @@ static void SetEntryPoint(flutter::Settings* settings, NSString* entrypoint, NSS
                               arguments:@[ @(client) ]];
 }
 
-- (void)flutterTextInputViewDidResignFirstResponder:(FlutterTextInputView *)textInputView {
-
-  dispatch_async(dispatch_get_main_queue(), ^(void){
+- (void)flutterTextInputViewDidResignFirstResponder:(FlutterTextInputView*)textInputView {
+  dispatch_async(dispatch_get_main_queue(), ^(void) {
     self.platformViewsController->checkFirstResponder();
   });
-//  if (self.platformViewsController->hasFirstResponder()) {
-//    NSLog(@"hasFirstResponder returns true");
-//    [self.textInputPlugin hideTextInput2];
-//  }
+  //  if (self.platformViewsController->hasFirstResponder()) {
+  //    NSLog(@"hasFirstResponder returns true");
+  //    [self.textInputPlugin hideTextInput2];
+  //  }
 }
 
 #pragma mark - Screenshot Delegate

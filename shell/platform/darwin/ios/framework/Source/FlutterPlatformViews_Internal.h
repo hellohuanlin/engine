@@ -177,9 +177,7 @@ class FlutterPlatformViewsController {
 
   void OnMethodCall(FlutterMethodCall* call, FlutterResult& result);
 
-
   void checkFirstResponder();
-
 
  private:
   static const size_t kMaxLayerAllocations = 2;
