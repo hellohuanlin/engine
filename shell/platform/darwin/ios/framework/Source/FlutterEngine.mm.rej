@@ -1,0 +1,32 @@
+***************
+*** 960,974 ****
+                                arguments:@[ @(client) ]];
+  }
+  
+- - (void)flutterTextInputViewDidResignFirstResponder:(FlutterTextInputView *)textInputView {
+- 
+-   dispatch_async(dispatch_get_main_queue(), ^(void){
+      self.platformViewsController->checkFirstResponder();
+    });
+- //  if (self.platformViewsController->hasFirstResponder()) {
+- //    NSLog(@"hasFirstResponder returns true");
+- //    [self.textInputPlugin hideTextInput2];
+- //  }
+  }
+  
+  #pragma mark - Screenshot Delegate
+--- 960,973 ----
+                                arguments:@[ @(client) ]];
+  }
+  
++ - (void)flutterTextInputViewDidResignFirstResponder:(FlutterTextInputView*)textInputView {
++   dispatch_async(dispatch_get_main_queue(), ^(void) {
+      self.platformViewsController->checkFirstResponder();
+    });
++   //  if (self.platformViewsController->hasFirstResponder()) {
++   //    NSLog(@"hasFirstResponder returns true");
++   //    [self.textInputPlugin hideTextInput2];
++   //  }
+  }
+  
+  #pragma mark - Screenshot Delegate

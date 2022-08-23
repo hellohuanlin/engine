@@ -1,0 +1,218 @@
+***************
+*** 22,36 ****
+  #import <objc/runtime.h>
+  
+  @interface UIView (KVO)
+- @property (nonatomic, readonly) BOOL hasFirstResponderInViewTree;
+  @end
+  
+  @implementation UIView (KVO)
+- - (BOOL) hasFirstResponderInViewTree {
+    if (self.isFirstResponder) {
+      return YES;
+    }
+-   for (UIView *subview in self.subviews) {
+      if (subview.hasFirstResponderInViewTree) {
+        return YES;
+      }
+--- 22,36 ----
+  #import <objc/runtime.h>
+  
+  @interface UIView (KVO)
++ @property(nonatomic, readonly) BOOL hasFirstResponderInViewTree;
+  @end
+  
+  @implementation UIView (KVO)
++ - (BOOL)hasFirstResponderInViewTree {
+    if (self.isFirstResponder) {
+      return YES;
+    }
++   for (UIView* subview in self.subviews) {
+      if (subview.hasFirstResponderInViewTree) {
+        return YES;
+      }
+***************
+*** 313,322 ****
+  // TODO: rename to checkFirstResponder and report
+  void FlutterPlatformViewsController::checkFirstResponder() {
+    for (auto const& [key, val] : root_views_) {
+-     UIView *root_view = val.get();
+      if ([root_view hasFirstResponderInViewTree]) {
+- 
+-       FlutterViewController *flutterViewController = (FlutterViewController *)getFlutterViewController();
+        if (flutterViewController) {
+          [flutterViewController sendPlatformViewDidBecameFirstResponder:key];
+        }
+--- 313,322 ----
+  // TODO: rename to checkFirstResponder and report
+  void FlutterPlatformViewsController::checkFirstResponder() {
+    for (auto const& [key, val] : root_views_) {
++     UIView* root_view = val.get();
+      if ([root_view hasFirstResponderInViewTree]) {
++       FlutterViewController* flutterViewController =
++           (FlutterViewController*)getFlutterViewController();
+        if (flutterViewController) {
+          [flutterViewController sendPlatformViewDidBecameFirstResponder:key];
+        }
+***************
+*** 326,332 ****
+    }
+  }
+  
+- 
+  void FlutterPlatformViewsController::PrerollCompositeEmbeddedView(
+      int view_id,
+      std::unique_ptr<EmbeddedViewParams> params) {
+--- 326,331 ----
+    }
+  }
+  
+  void FlutterPlatformViewsController::PrerollCompositeEmbeddedView(
+      int view_id,
+      std::unique_ptr<EmbeddedViewParams> params) {
+***************
+*** 809,844 ****
+      [self addGestureRecognizer:_delayingRecognizer.get()];
+      [self addGestureRecognizer:forwardingRecognizer];
+  
+-     [NSNotificationCenter.defaultCenter addObserver:self selector:@selector(didChangeFirstResponder:) name:@"didChangeFirstResponder" object:nil];
+    }
+    return self;
+  }
+  
+- - (void)didChangeFirstResponder: (NSNotification *)notification {
+- 
+- //  id oldView = notification.userInfo[NSKeyValueChangeOldKey];
+    id newView = notification.userInfo[@"responder"];
+  
+- //  if ([oldView isKindOfClass:UIView.class]) {
+- //    if ([oldView isDescendantOfView:_embeddedView]) {
+- //      FlutterViewController *flutterViewController = (FlutterViewController *)_platformViewsController->getFlutterViewController();
+- //      if (flutterViewController) {
+- //        [flutterViewController sendPlatformViewDidResignFirstResponder: _viewId];
+- //      }
+- //    }
+- //  }
+  
+    if ([newView isKindOfClass:UIView.class]) {
+      if ([newView isDescendantOfView:_embeddedView]) {
+-       FlutterViewController *flutterViewController = (FlutterViewController *)_platformViewsController->getFlutterViewController();
+        if (flutterViewController) {
+-        // [flutterViewController sendPlatformViewDidBecameFirstResponder:_viewId];
+        }
+      }
+    }
+  }
+  
+- 
+  - (UIView*)embeddedView {
+    return [[_embeddedView retain] autorelease];
+  }
+--- 808,845 ----
+      [self addGestureRecognizer:_delayingRecognizer.get()];
+      [self addGestureRecognizer:forwardingRecognizer];
+  
++     [NSNotificationCenter.defaultCenter addObserver:self
++                                            selector:@selector(didChangeFirstResponder:)
++                                                name:@"didChangeFirstResponder"
++                                              object:nil];
+    }
+    return self;
+  }
+  
++ - (void)didChangeFirstResponder:(NSNotification*)notification {
++   //  id oldView = notification.userInfo[NSKeyValueChangeOldKey];
+    id newView = notification.userInfo[@"responder"];
+  
++   //  if ([oldView isKindOfClass:UIView.class]) {
++   //    if ([oldView isDescendantOfView:_embeddedView]) {
++   //      FlutterViewController *flutterViewController = (FlutterViewController
++   //      *)_platformViewsController->getFlutterViewController(); if (flutterViewController) {
++   //        [flutterViewController sendPlatformViewDidResignFirstResponder: _viewId];
++   //      }
++   //    }
++   //  }
+  
+    if ([newView isKindOfClass:UIView.class]) {
+      if ([newView isDescendantOfView:_embeddedView]) {
++       FlutterViewController* flutterViewController =
++           (FlutterViewController*)_platformViewsController->getFlutterViewController();
+        if (flutterViewController) {
++         // [flutterViewController sendPlatformViewDidBecameFirstResponder:_viewId];
+        }
+      }
+    }
+  }
+  
+  - (UIView*)embeddedView {
+    return [[_embeddedView retain] autorelease];
+  }
+***************
+*** 1024,1031 ****
+  }
+  @end
+  
+- 
+- 
+  @interface UIResponder (PostNotification)
+  - (BOOL)customBecomeFirstResponder;
+  @end
+--- 1025,1030 ----
+  }
+  @end
+  
+  @interface UIResponder (PostNotification)
+  - (BOOL)customBecomeFirstResponder;
+  @end
+***************
+*** 1033,1043 ****
+  @implementation UIResponder (PostNotification)
+  
+  - (BOOL)customBecomeFirstResponder {
+- 
+-   NSMutableDictionary *userInfo = [NSMutableDictionary dictionary];
+    userInfo[@"responder"] = self;
+  
+-   [NSNotificationCenter.defaultCenter postNotificationName:@"didChangeFirstResponder" object:self userInfo:userInfo];
+  
+    return [self customBecomeFirstResponder];
+  }
+--- 1032,1043 ----
+  @implementation UIResponder (PostNotification)
+  
+  - (BOOL)customBecomeFirstResponder {
++   NSMutableDictionary* userInfo = [NSMutableDictionary dictionary];
+    userInfo[@"responder"] = self;
+  
++   [NSNotificationCenter.defaultCenter postNotificationName:@"didChangeFirstResponder"
++                                                     object:self
++                                                   userInfo:userInfo];
+  
+    return [self customBecomeFirstResponder];
+  }
+***************
+*** 1056,1067 ****
+      IMP originalImp = method_getImplementation(originalMethod);
+      IMP swizzledImp = method_getImplementation(swizzledMethod);
+  
+-     class_replaceMethod(clazz, swizzledSelector, originalImp, method_getTypeEncoding(originalMethod));
+-     class_replaceMethod(clazz, originalSelector, swizzledImp, method_getTypeEncoding(swizzledMethod));
+  
+    });
+  }
+  */
+  @end
+- 
+- 
+--- 1056,1066 ----
+      IMP originalImp = method_getImplementation(originalMethod);
+      IMP swizzledImp = method_getImplementation(swizzledMethod);
+  
++     class_replaceMethod(clazz, swizzledSelector, originalImp,
++ method_getTypeEncoding(originalMethod)); class_replaceMethod(clazz, originalSelector, swizzledImp,
++ method_getTypeEncoding(swizzledMethod));
+  
+    });
+  }
+  */
+  @end
