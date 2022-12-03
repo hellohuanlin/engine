@@ -32,6 +32,12 @@ static NSString* const kShowMethod = @"TextInput.show";
 static NSString* const kHideMethod = @"TextInput.hide";
 static NSString* const kSetClientMethod = @"TextInput.setClient";
 static NSString* const kSetPlatformViewClientMethod = @"TextInput.setPlatformViewClient";
+
+static NSString* const kOnPointerUpInScrollView = @"TextInput.onPointerUpInScrollView";
+static NSString* const kOnPointerDownInScrollView = @"TextInput.onPointerDownInScrollView";
+static NSString* const kOnPointerMoveInScrollView = @"TextInput.onPointerMoveInScrollView";
+static NSString* const kOnPointerCancelInScrollView = @"TextInput.onPointerCancelInScrollView";
+
 static NSString* const kSetEditingStateMethod = @"TextInput.setEditingState";
 static NSString* const kClearClientMethod = @"TextInput.clearClient";
 static NSString* const kSetEditableSizeAndTransformMethod =
@@ -748,6 +754,27 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 }
 
 @end
+
+@interface UIView (FirstResponder)
+- (UIView *)flt_firstResponder;
+@end
+
+@implementation UIView (FirstResponder)
+- (UIView *)flt_firstResponder {
+  if (self.isFirstResponder) {
+    return self;
+  }
+
+  for (UIView *subview in self.subviews) {
+    UIView *firstResponder = subview.flt_firstResponder;
+    if (firstResponder) {
+      return firstResponder;
+    }
+  }
+  return nil;
+}
+@end
+
 
 @interface FlutterTextInputPlugin ()
 @property(nonatomic, readonly, weak) id<FlutterTextInputDelegate> textInputDelegate;
@@ -2193,6 +2220,13 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 @property(nonatomic, readonly, weak) id<FlutterViewResponder> viewResponder;
 @end
 
+@interface FlutterTextInputPlugin ()
+@property(nonatomic, retain) UIView *fakeKeyboardViewContainer;
+@property(nonatomic, assign) CGRect keyboardFrame;
+@property(nonatomic, retain) UIView *firstResponder;
+
+@end
+
 @implementation FlutterTextInputPlugin {
   NSTimer* _enableFlutterTextInputViewAccessibilityTimer;
 }
@@ -2206,6 +2240,11 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
     _autofillContext = [[NSMutableDictionary alloc] init];
     _inputHider = [[FlutterTextInputViewAccessibilityHider alloc] init];
     _scribbleElements = [[NSMutableDictionary alloc] init];
+    _fakeKeyboardViewContainer = [[UIView alloc] init];
+    _keyboardFrame = CGRectMake(0, 0, 0, 0);
+
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleKeyboardWillShow:) name:UIKeyboardWillShowNotification object:nil];
+    [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(handleKeyboardWillHide:) name:UIKeyboardWillHideNotification object:nil];
   }
 
   return self;
@@ -2242,7 +2281,24 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
     // This method call has a `platformViewId` argument, but we do not need it for iOS for now.
     [self setPlatformViewTextInputClient];
     result(nil);
-  } else if ([method isEqualToString:kSetEditingStateMethod]) {
+  }
+  else if ([method isEqualToString:kOnPointerUpInScrollView]) {
+    [self onPointerUpInScrollView: args];
+    result(nil);
+  }
+  else if ([method isEqualToString:kOnPointerDownInScrollView]) {
+    [self onPointerDownInScrollView: args];
+    result(nil);
+  }
+  else if ([method isEqualToString:kOnPointerMoveInScrollView]) {
+    [self onPointerMoveInScrollView: args];
+    result(nil);
+  }
+  else if ([method isEqualToString:kOnPointerCancelInScrollView]) {
+    [self onPointerCancelInScrollView: args];
+    result(nil);
+  }
+  else if ([method isEqualToString:kSetEditingStateMethod]) {
     [self setTextInputEditingState:args];
     result(nil);
   } else if ([method isEqualToString:kClearClientMethod]) {
@@ -2391,6 +2447,135 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   _activeView.accessibilityEnabled = NO;
   [_activeView removeFromSuperview];
   [_inputHider removeFromSuperview];
+}
+
+- (void)handleKeyboardWillShow: (NSNotification *)notification {
+  CGRect frame = ((NSNumber *)notification.userInfo[UIKeyboardFrameEndUserInfoKey]).CGRectValue;
+  self.keyboardFrame = frame;
+  self.fakeKeyboardViewContainer.hidden = YES;
+}
+
+- (void)handleKeyboardWillHide: (NSNotification *)notification {
+  self.fakeKeyboardViewContainer.hidden = NO;
+}
+
+- (void)takeSnapshot {
+
+  UIScreen *screen = UIScreen.mainScreen;
+  UIView *snapshot = [screen snapshotViewAfterScreenUpdates:true];
+
+  UIGraphicsBeginImageContextWithOptions(self.keyboardFrame.size, NO, UIScreen.mainScreen.scale);
+
+  CGContextRef context = UIGraphicsGetCurrentContext();
+  CGContextTranslateCTM(context, -self.keyboardFrame.origin.x, -self.keyboardFrame.origin.y);
+  [snapshot drawViewHierarchyInRect:snapshot.bounds afterScreenUpdates:YES];
+  UIImage *keyboardImage = UIGraphicsGetImageFromCurrentImageContext();
+  UIGraphicsEndImageContext();
+
+  if (!self.fakeKeyboardViewContainer.superview) {
+    [UIApplication.sharedApplication.keyWindow.rootViewController.view addSubview:self.fakeKeyboardViewContainer];
+  }
+
+  UIImageView *fakeKeyboardView = [[UIImageView alloc] initWithImage:keyboardImage];
+  [self.fakeKeyboardViewContainer addSubview:fakeKeyboardView];
+  self.fakeKeyboardViewContainer.frame = self.keyboardFrame;
+
+  // hide real keyboard without animation
+  [UIView setAnimationsEnabled:NO];
+  self.firstResponder = UIApplication.sharedApplication.keyWindow.flt_firstResponder;
+  [self.firstResponder resignFirstResponder];
+  // DO NOT CALL [self hideTextInput] yet, since it's not really resigning just yet. We may want to regain it if needed)
+//  [self hideTextInput];
+  [UIView setAnimationsEnabled:YES];
+}
+
+- (void)onPointerDownInScrollView: (NSDictionary*)dict {
+  NSLog(@"engine onPointerDownInScrollView");
+  // Nothing
+}
+
+- (void)onPointerMoveInScrollView: (NSDictionary*)dict {
+  NSLog(@"onPointerMoveInScrollView in engine, should take snapshot if needed, and move the fake keyboard if needed");
+  CGFloat y = ((NSNumber *)dict[@"y"]).doubleValue;
+  NSLog(@"y value in CGFloat is: %f", y);
+
+  CGFloat screenHeight = UIScreen.mainScreen.bounds.size.height;
+  CGFloat keyboardWidth = self.keyboardFrame.size.width;
+  CGFloat keyboardHeight = self.keyboardFrame.size.height;
+  CGFloat offsetY = keyboardHeight - (screenHeight - y);
+
+  // take snapshot if needed
+  // a threads hold of -10
+  if (offsetY >= -10) {
+    if (self.fakeKeyboardViewContainer.subviews.count == 0) {
+      [self takeSnapshot];
+    }
+  }
+
+  // less than zero means it's above the keyboard
+  if (offsetY < 0) {
+    offsetY = 0;
+  }
+  CGFloat fakeKeyboardY = screenHeight - keyboardHeight + offsetY;
+
+  self.fakeKeyboardViewContainer.frame = CGRectMake(0, fakeKeyboardY, keyboardWidth, keyboardHeight);
+}
+
+- (void)onPointerUpInScrollView: (NSDictionary*)dict {
+  CGFloat y = ((NSNumber *)dict[@"y"]).doubleValue;
+  NSLog(@"y value in CGFloat is: %f", y);
+
+  CGFloat screenHeight = UIScreen.mainScreen.bounds.size.height;
+  CGFloat keyboardWidth = self.fakeKeyboardViewContainer.frame.size.width;
+  CGFloat keyboardHeight = self.fakeKeyboardViewContainer.frame.size.height;
+
+  CGFloat midKeyboardPoint = screenHeight - keyboardHeight/2;
+  BOOL shouldShowRealKeyboard = y < midKeyboardPoint;
+
+
+  CGFloat fakeKeyboardY = shouldShowRealKeyboard ? screenHeight - keyboardHeight : screenHeight;
+
+  // if should show real keyboard
+  // animate fake keyboard to show position, then remove it
+  // then show real keyboard without animation
+
+  // if should hide real keyboard
+  // animate fake keyboard to hide position, then remove it
+  // then hide real keyboard without animation
+
+  [UIView animateWithDuration:0.5 animations:^{
+    self.fakeKeyboardViewContainer.frame = CGRectMake(0, fakeKeyboardY, keyboardWidth, keyboardHeight);
+    } completion:^(BOOL finished) {
+
+      // There's a delay on showing the keyboard, even without animation.
+      dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.2 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+
+        for (UIView *subview in self.fakeKeyboardViewContainer.subviews) {
+          [subview removeFromSuperview];
+        }
+      });
+
+      if (shouldShowRealKeyboard) {
+        [UIView setAnimationsEnabled:NO];
+        [self.firstResponder becomeFirstResponder];
+        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, 0.5 * NSEC_PER_SEC), dispatch_get_main_queue(), ^{
+          [UIView setAnimationsEnabled:YES];
+        });
+      } else {
+        // Just tell flutter framework to unfocus
+
+        // Already resigned first responder to hide the real keyboard, so calling resign again
+        // won't trigger the engine delegate function (guarded by if (success))
+        // So we have to manually trigger another delegate function to tell framework to unfocus in UI.
+        [self hideTextInput];
+        [self.textInputDelegate flutterTextInputViewDidDismissFakeKeyboard];
+        [UIView setAnimationsEnabled:YES];
+      }
+    }];
+}
+
+- (void)onPointerCancelInScrollView: (NSDictionary*)dict {
+  NSLog(@"onPointerCancelInScrollView in engine");
 }
 
 - (void)setTextInputClient:(int)client withConfiguration:(NSDictionary*)configuration {

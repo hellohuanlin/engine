@@ -61,6 +61,8 @@ typedef NS_ENUM(NSInteger, FlutterFloatingCursorDragState) {
 - (void)flutterTextInputView:(FlutterTextInputView*)textInputView removeTextPlaceholder:(int)client;
 - (void)flutterTextInputView:(FlutterTextInputView*)textInputView
     didResignFirstResponderWithTextInputClient:(int)client;
+// Cannot use flutterTextInputViewDidResignFirstResponder since the first responder is already resigned when real keyboard is dismissed.
+    - (void)flutterTextInputViewDidDismissFakeKeyboard;
 @end
 
 #endif  // SHELL_PLATFORM_IOS_FRAMEWORK_SOURCE_FLUTTERTEXTINPUTDELEGATE_H_
