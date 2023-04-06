@@ -843,6 +843,62 @@ static void SendFakeTouchEvent(FlutterEngine* engine,
   [super viewDidDisappear:animated];
 }
 
+- (void)viewWillTransitionToSize:(CGSize)size
+       withTransitionCoordinator:(id<UIViewControllerTransitionCoordinator>)coordinator {
+  [super viewWillTransitionToSize:size withTransitionCoordinator:coordinator];
+
+  if (coordinator.isInteractive) {
+    return;
+  }
+
+  if (!self.isViewLoaded) {
+    return;
+  }
+
+  // There is no transition and hence nothing to do.
+  if (CGSizeEqualToSize(self.view.bounds.size, size)) {
+    return;
+  }
+
+  if (!_engine) {
+    return;
+  }
+
+  auto& shell = [_engine.get() shell];
+
+  if (!shell.IsSetup()) {
+    return;
+  }
+
+  CFTimeInterval startTime = CACurrentMediaTime();
+
+  UIView* snapshot = [self.view snapshotViewAfterScreenUpdates:YES];
+  UIView* fakeView = snapshot;
+
+  [self.view addSubview:fakeView];
+  fakeView.contentMode = UIViewContentModeScaleToFill;
+  fakeView.frame = self.view.bounds;
+  fakeView.autoresizingMask = UIViewAutoresizingFlexibleWidth | UIViewAutoresizingFlexibleHeight;
+  CFTimeInterval elapsedTime = CACurrentMediaTime() - startTime;
+  double fadePhaseDurationRate = 0.2;
+  double startPhaseDurationRate = (1 - fadePhaseDurationRate) / 2;
+
+  dispatch_after(
+      dispatch_time(DISPATCH_TIME_NOW, static_cast<int64_t>(coordinator.transitionDuration *
+                                                            NSEC_PER_SEC * startPhaseDurationRate)),
+      dispatch_get_main_queue(), ^{
+        [UIView animateWithDuration:fadePhaseDurationRate * coordinator.transitionDuration
+            delay:0
+            options:UIViewAnimationOptionCurveLinear
+            animations:^() {
+              fakeView.alpha = 0.0;
+            }
+            completion:^(BOOL finished) {
+              [fakeView removeFromSuperview];
+            }];
+      });
+}
+
 - (void)flushOngoingTouches {
   if (_engine && _ongoingTouches.get().count > 0) {
     auto packet = std::make_unique<flutter::PointerDataPacket>(_ongoingTouches.get().count);
