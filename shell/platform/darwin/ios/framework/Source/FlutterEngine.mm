@@ -1151,8 +1151,7 @@ static void SetEntryPoint(flutter::Settings* settings, NSString* entrypoint, NSS
 
 - (void)flutterTextInputViewDidDismissFakeKeyboard {
   NSLog(@"invoke channel TextInputClient.didResignFirstResponder");
-  [_textInputChannel.get() invokeMethod:@"TextInputClient.didResignFirstResponder"
-                              arguments:nil];
+  [_textInputChannel.get() invokeMethod:@"TextInputClient.didResignFirstResponder" arguments:nil];
 }
 
 #pragma mark - Undo Manager Delegate
