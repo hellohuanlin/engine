@@ -1271,7 +1271,7 @@ static flutter::PointerData::DeviceKind DeviceKindFromTouchType(UITouch* touch) 
 
 - (void)viewDidLayoutSubviews {
   CGRect viewBounds = self.view.bounds;
-  CGFloat scale = [UIScreen mainScreen].scale;
+  CGFloat scale = [self mainScreenIfViewLoaded].scale;
 
   // Purposefully place this not visible.
   _scrollView.get().frame = CGRectMake(0.0, 0.0, viewBounds.size.width, 0.0);
@@ -2230,7 +2230,7 @@ static flutter::PointerData::DeviceKind DeviceKindFromTouchType(UITouch* touch) 
 
 - (void)hoverEvent:(UIPanGestureRecognizer*)recognizer API_AVAILABLE(ios(13.4)) {
   CGPoint location = [recognizer locationInView:self.view];
-  CGFloat scale = [UIScreen mainScreen].scale;
+  CGFloat scale = [self mainScreenIfViewLoaded].scale;
   CGPoint oldLocation = _mouseState.location;
   _mouseState.location = {location.x * scale, location.y * scale};
 
@@ -2287,7 +2287,7 @@ static flutter::PointerData::DeviceKind DeviceKindFromTouchType(UITouch* touch) 
 
 - (void)discreteScrollEvent:(UIPanGestureRecognizer*)recognizer API_AVAILABLE(ios(13.4)) {
   CGPoint translation = [recognizer translationInView:self.view];
-  const CGFloat scale = [UIScreen mainScreen].scale;
+  const CGFloat scale = [self mainScreenIfViewLoaded].scale;
 
   translation.x *= scale;
   translation.y *= scale;

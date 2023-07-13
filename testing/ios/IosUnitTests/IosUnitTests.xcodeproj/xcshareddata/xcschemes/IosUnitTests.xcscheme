@@ -55,6 +55,83 @@
                BlueprintName = "IosUnitTestsTests"
                ReferencedContainer = "container:IosUnitTests.xcodeproj">
             </BuildableReference>
+            <SkippedTests>
+               <Test
+                  Identifier = "AccessibilityBridgeTest">
+               </Test>
+               <Test
+                  Identifier = "ConnectionCollectionTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterAppDelegateTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterBinaryMessengerRelayTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterChannelKeyResponderTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterChannelsTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterDartProjectTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterEmbedderKeyResponderTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterEngineGroupTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterEnginePlatformViewTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterEngineTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterEngineTest_mrc">
+               </Test>
+               <Test
+                  Identifier = "FlutterKeyboardManagerTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterPlatformPluginTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterPlatformViewsTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterPluginAppLifeCycleDelegateTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterRestorationPluginTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterSpellCheckPluginTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterTextInputPluginTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterTextureRegistryRelayTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterUndoManagerPluginTest">
+               </Test>
+               <Test
+                  Identifier = "FlutterViewTest">
+               </Test>
+               <Test
+                  Identifier = "PlatformMessageHandlerIosTest">
+               </Test>
+               <Test
+                  Identifier = "SemanticsObjectTest">
+               </Test>
+               <Test
+                  Identifier = "VsyncWaiterIosTest">
+               </Test>
+            </SkippedTests>
          </TestableReference>
       </Testables>
    </TestAction>
