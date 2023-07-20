@@ -787,6 +787,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 @property(nonatomic, assign) CGRect markedRect;
 @property(nonatomic) BOOL isVisibleToAutofill;
 @property(nonatomic, assign) BOOL accessibilityEnabled;
+@property(nonatomic, assign) BOOL shouldOmitConnectionClosedReport;
 // The composed character that is temporarily removed by the keyboard API.
 // This is cleared at the start of each keyboard interaction. (Enter a character, delete a character
 // etc)
@@ -1112,7 +1113,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 
 - (BOOL)resignFirstResponder {
   BOOL success = [super resignFirstResponder];
-  if (success) {
+  if (success && !self.shouldOmitConnectionClosedReport) {
     [self.textInputDelegate flutterTextInputView:self
         didResignFirstResponderWithTextInputClient:_textInputClient];
   }
@@ -2476,14 +2477,17 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
         addSubview:self.fakeKeyboardViewContainer];
   }
 
-  UIImageView *fakeKeyboardView = [[UIImageView alloc] initWithImage:keyboardImage];
+  UIImageView* fakeKeyboardView = [[UIImageView alloc] initWithImage:keyboardImage];
   [self.fakeKeyboardViewContainer addSubview:fakeKeyboardView];
   self.fakeKeyboardViewContainer.frame = self.keyboardFrame;
 
   // hide real keyboard without animation
   [UIView setAnimationsEnabled:NO];
   self.firstResponder = UIApplication.sharedApplication.keyWindow.flt_firstResponder;
+
+  _activeView.shouldOmitConnectionClosedReport = YES;
   [self.firstResponder resignFirstResponder];
+  _activeView.shouldOmitConnectionClosedReport = NO;
   // DO NOT CALL [self hideTextInput] yet, since it's not really resigning just yet. We may want to
   // regain it if needed)
   //  [self hideTextInput];
