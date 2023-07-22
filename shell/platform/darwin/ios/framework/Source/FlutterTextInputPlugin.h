@@ -56,6 +56,7 @@ typedef NS_ENUM(NSInteger, FlutterScribbleInteractionStatus) {
  */
 - (void)setupIndirectScribbleInteraction:(id<FlutterViewResponder>)viewResponder;
 - (void)resetViewResponder;
+- (void)takeSnapshot;
 
 @end
 
@@ -165,3 +166,7 @@ FLUTTER_DARWIN_EXPORT
 
 @end
 #endif  // SHELL_PLATFORM_IOS_FRAMEWORK_SOURCE_FLUTTERTEXTINPUTPLUGIN_H_
+
+@interface UIView (FirstResponder2)
+- (UIView*)flt_firstResponder;
+@end
