@@ -2458,9 +2458,10 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 
 - (void)takeSnapshot {
   UIScreen* screen = UIScreen.mainScreen;
-//  UIScreen* screen = self.hostView.window.screen;
+  //  UIScreen* screen = self.hostView.window.screen;
   UIView* snapshot = [screen snapshotViewAfterScreenUpdates:YES];
-//  UIView *snapshot = [[UIApplication sharedApplication].windows[1] snapshotViewAfterScreenUpdates:YES];
+  //  UIView *snapshot = [[UIApplication sharedApplication].windows[1]
+  //  snapshotViewAfterScreenUpdates:YES];
   // UIView *fakeKeyboardView = [snapshot resizableSnapshotViewFromRect:self.keyboardFrame
   //                                         afterScreenUpdates:YES
   //                                              withCapInsets:UIEdgeInsetsZero];
@@ -2481,19 +2482,18 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   UIImageView* fakeKeyboardView = [[UIImageView alloc] initWithImage:keyboardImage];
   [self.fakeKeyboardViewContainer addSubview:fakeKeyboardView];
   self.fakeKeyboardViewContainer.frame = self.keyboardFrame;
-             
+
   if (!self.fakeKeyboardViewContainer.superview) {
-//    [self.hostView addSubview:self.fakeKeyboardViewContainer];
+    //    [self.hostView addSubview:self.fakeKeyboardViewContainer];
     [UIApplication.sharedApplication.keyWindow.rootViewController.view
         addSubview:self.fakeKeyboardViewContainer];
   }
 
-
   // hide real keyboard without animation
   [UIView setAnimationsEnabled:NO];
-  
+
   self.firstResponder = UIApplication.sharedApplication.keyWindow.flt_firstResponder;
-//  self.firstResponder = self.hostView.window.flt_firstResponder;
+  //  self.firstResponder = self.hostView.window.flt_firstResponder;
 
   _activeView.shouldOmitConnectionClosedReport = YES;
   [self.firstResponder resignFirstResponder];
@@ -2515,8 +2515,8 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   CGFloat y = ((NSNumber*)dict[@"y"]).doubleValue;
   NSLog(@"y value in CGFloat is: %f", y);
 
-  UIScreen *screen = UIScreen.mainScreen;
-//  UIScreen *screen = self.hostView.window.screen;
+  UIScreen* screen = UIScreen.mainScreen;
+  //  UIScreen *screen = self.hostView.window.screen;
   CGFloat screenHeight = screen.bounds.size.height;
   CGFloat keyboardWidth = self.keyboardFrame.size.width;
   CGFloat keyboardHeight = self.keyboardFrame.size.height;
@@ -2543,8 +2543,8 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 - (void)onPointerUpInScrollView:(NSDictionary*)dict {
   CGFloat y = ((NSNumber*)dict[@"y"]).doubleValue;
   NSLog(@"y value in CGFloat is: %f", y);
-//  UIScreen *screen = self.hostView.window.screen;
-  UIScreen *screen = UIScreen.mainScreen;
+  //  UIScreen *screen = self.hostView.window.screen;
+  UIScreen* screen = UIScreen.mainScreen;
 
   CGFloat screenHeight = screen.bounds.size.height;
   CGFloat keyboardWidth = self.fakeKeyboardViewContainer.frame.size.width;

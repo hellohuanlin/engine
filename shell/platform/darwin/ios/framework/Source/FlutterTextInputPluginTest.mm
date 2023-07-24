@@ -62,7 +62,7 @@ FLUTTER_ASSERT_ARC
 @property(nonatomic, assign) FlutterTextInputView* activeView;
 @property(nonatomic, readonly)
     NSMutableDictionary<NSString*, FlutterTextInputView*>* autofillContext;
-@property(nonatomic, readonly) UIView *fakeKeyboardViewContainer;
+@property(nonatomic, readonly) UIView* fakeKeyboardViewContainer;
 
 - (void)cleanUpViewHierarchy:(BOOL)includeActiveView
                    clearText:(BOOL)clearText
@@ -2316,10 +2316,9 @@ FLUTTER_ASSERT_ARC
   XCTAssertNil(activeView.superview, @"activeView must be removed from view hierarchy.");
 }
 
-
 - (void)testFirstResponder {
-  UIWindow *window = [[UIWindow alloc] init];
-  UITextField *textField = [[UITextField alloc] init];
+  UIWindow* window = [[UIWindow alloc] init];
+  UITextField* textField = [[UITextField alloc] init];
   [window addSubview:textField];
   [textField becomeFirstResponder];
   XCTAssertEqual(window.flt_firstResponder, textField);
@@ -2328,7 +2327,6 @@ FLUTTER_ASSERT_ARC
 }
 
 - (void)testWillResignFirstResponderWhenReceivingKeyboardEvent {
-
   FlutterTextInputView* inputView = [[FlutterTextInputView alloc] initWithOwner:textInputPlugin];
   [UIApplication.sharedApplication.keyWindow addSubview:inputView];
   [inputView setTextInputClient:123];
@@ -2339,83 +2337,77 @@ FLUTTER_ASSERT_ARC
   NSNotification* notification =
       [NSNotification notificationWithName:UIKeyboardWillShowNotification
                                     object:nil
-                                  userInfo:@{
-                                    @"UIKeyboardFrameEndUserInfoKey" : @(keyboardFrame)
-                                  }];
+                                  userInfo:@{@"UIKeyboardFrameEndUserInfoKey" : @(keyboardFrame)}];
   [[NSNotificationCenter defaultCenter] postNotification:notification];
 
-  FlutterMethodCall* call = [FlutterMethodCall
-      methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
-                     arguments:@{@"y" : [NSNumber numberWithFloat:500]}];
+  FlutterMethodCall* call =
+      [FlutterMethodCall methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
+                                        arguments:@{@"y" : [NSNumber numberWithFloat:500]}];
 
   XCTAssert(inputView.isFirstResponder);
 
   [textInputPlugin handleMethodCall:call
-                           result:^(id _Nullable result){
-                           }];
+                             result:^(id _Nullable result){
+                             }];
 
   XCTAssertFalse(inputView.isFirstResponder);
 }
 
 - (void)testWillTakeScreenshotWhenReceivingKeyboardEvent {
-
   CGRect keyboardFrame = CGRectMake(0, 500, 500, 500);
   NSNotification* notification =
       [NSNotification notificationWithName:UIKeyboardWillShowNotification
                                     object:nil
-                                  userInfo:@{
-                                    @"UIKeyboardFrameEndUserInfoKey" : @(keyboardFrame)
-                                  }];
+                                  userInfo:@{@"UIKeyboardFrameEndUserInfoKey" : @(keyboardFrame)}];
   [[NSNotificationCenter defaultCenter] postNotification:notification];
 
-  FlutterMethodCall* call = [FlutterMethodCall
-      methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
-                     arguments:@{@"y" : [NSNumber numberWithFloat:500]}];
+  FlutterMethodCall* call =
+      [FlutterMethodCall methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
+                                        arguments:@{@"y" : [NSNumber numberWithFloat:500]}];
 
   XCTAssertNil(textInputPlugin.fakeKeyboardViewContainer.superview);
   [textInputPlugin handleMethodCall:call
-                           result:^(id _Nullable result){
-                           }];
+                             result:^(id _Nullable result){
+                             }];
 
-  XCTAssertNotNil(textInputPlugin.fakeKeyboardViewContainer.superview); 
+  XCTAssertNotNil(textInputPlugin.fakeKeyboardViewContainer.superview);
 }
 
 - (void)testPointerUpDismissKeyboard {
-
   XCTestExpectation* didCall = [self expectationWithDescription:@"didCallReply"];
 
-  OCMStub([engine flutterTextInputViewDidDismissFakeKeyboard])
-    .andDo(^(NSInvocation* invocation) {
-      [didCall fulfill];
-    });
+  OCMStub([engine flutterTextInputViewDidDismissFakeKeyboard]).andDo(^(NSInvocation* invocation) {
+    [didCall fulfill];
+  });
 
   CGRect keyboardFrame = CGRectMake(0, 500, 500, 500);
-  [[NSNotificationCenter defaultCenter] postNotificationName:UIKeyboardWillShowNotification 
-    object: nil
-    userInfo: @{
-      @"UIKeyboardFrameEndUserInfoKey" : @(keyboardFrame)
-    }];
+  [[NSNotificationCenter defaultCenter]
+      postNotificationName:UIKeyboardWillShowNotification
+                    object:nil
+                  userInfo:@{@"UIKeyboardFrameEndUserInfoKey" : @(keyboardFrame)}];
 
-  [textInputPlugin handleMethodCall:[FlutterMethodCall
-      methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
-                     arguments:@{@"y" : [NSNumber numberWithFloat:500]}]
-                           result:^(id _Nullable result){
-                           }];
+  [textInputPlugin
+      handleMethodCall:[FlutterMethodCall
+                           methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
+                                          arguments:@{@"y" : [NSNumber numberWithFloat:500]}]
+                result:^(id _Nullable result){
+                }];
 
-  [textInputPlugin handleMethodCall:[FlutterMethodCall
-      methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
-                     arguments:@{@"y" : [NSNumber numberWithFloat:900]}]
-                           result:^(id _Nullable result){
-                           }];
-  
-  [textInputPlugin handleMethodCall:[FlutterMethodCall
-      methodCallWithMethodName:@"TextInput.onPointerUpInScrollView"
-                     arguments:@{@"y" : [NSNumber numberWithFloat:900]}]
-                           result:^(id _Nullable result){
-                           }];
+  [textInputPlugin
+      handleMethodCall:[FlutterMethodCall
+                           methodCallWithMethodName:@"TextInput.onPointerMoveInScrollView"
+                                          arguments:@{@"y" : [NSNumber numberWithFloat:900]}]
+                result:^(id _Nullable result){
+                }];
 
+  [textInputPlugin
+      handleMethodCall:[FlutterMethodCall
+                           methodCallWithMethodName:@"TextInput.onPointerUpInScrollView"
+                                          arguments:@{@"y" : [NSNumber numberWithFloat:900]}]
+                result:^(id _Nullable result){
+                }];
 
-  [self waitForExpectationsWithTimeout: 5.0 handler: nil];
+  [self waitForExpectationsWithTimeout:5.0 handler:nil];
 }
 
 @end
