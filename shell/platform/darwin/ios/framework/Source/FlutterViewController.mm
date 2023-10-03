@@ -819,6 +819,14 @@ static void SendFakeTouchEvent(UIScreen* screen,
   if ([_engine.get() viewController] == self) {
     [textInputPlugin setUpIndirectScribbleInteraction:self];
   }
+
+  FLTPasteControlFactory* pasteFactory = [[FLTPasteControlFactory alloc] initWithCallback:^{
+    [textInputPlugin securePaste];
+  }];
+
+  NSObject<FlutterPluginRegistrar>* registrar =
+      [_engine.get() registrarForPlugin:@"flutter.flutter_text_input_plugin"];
+  [registrar registerViewFactory:pasteFactory withId:@"paste_component"];
 }
 
 - (void)removeInternalPlugins {

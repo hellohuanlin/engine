@@ -2322,6 +2322,10 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   return _activeView;
 }
 
+- (void)securePaste {
+  [_activeView paste:nil];
+}
+
 - (void)handleMethodCall:(FlutterMethodCall*)call result:(FlutterResult)result {
   NSString* method = call.method;
   id args = call.arguments;
@@ -2984,4 +2988,72 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   }
   return nil;
 }
+@end
+
+@interface FLTPasteControl : NSObject <FlutterPlatformView, UIPasteConfigurationSupporting>
+@property(strong, nonatomic) UIPasteControl* pasteControl API_AVAILABLE(ios(16.0));
+@property(copy, nonatomic) UIPasteConfiguration* pasteConfiguration;
+@property(nonatomic, copy) void (^callback)(void);
+@end
+
+@implementation FLTPasteControl {
+  UIView* _view;
+}
+
+- (instancetype)initWithFrame:(CGRect)frame callback:(void (^)(void))callback {
+  self = [super init];
+  if (self) {
+    _callback = callback;
+    if (@available(iOS 16.0, *)) {
+      _pasteConfiguration =
+          [[UIPasteConfiguration alloc] initWithTypeIdentifiersForAcceptingClass:NSString.class];
+      UIPasteControlConfiguration* config = [[UIPasteControlConfiguration alloc] init];
+      config.displayMode = UIPasteControlDisplayModeLabelOnly;
+      config.baseForegroundColor = [UIColor redColor];
+      config.baseBackgroundColor = [UIColor greenColor];
+      config.cornerStyle = UIButtonConfigurationCornerStyleFixed;
+      _pasteControl = [[UIPasteControl alloc] initWithConfiguration:config];
+      _pasteControl.frame = CGRectMake(0, 0, 70, 34);
+      _pasteControl.target = self;
+      _view = [[UIView alloc] initWithFrame:frame];
+      [_view addSubview:_pasteControl];
+    }
+  }
+  return self;
+}
+
+- (UIView*)view {
+  return _view;
+  // if (@available(iOS 16.0, *)) {
+  //   return self.pasteControl;
+  // } else {
+  //   return nil;
+  // }
+}
+
+- (void)pasteItemProviders:(NSArray<NSItemProvider*>*)itemProviders {
+  _callback();
+}
+
+- (BOOL)canPasteItemProviders:(NSArray<NSItemProvider*>*)itemProviders {
+  return YES;
+}
+
+@end
+
+@implementation FLTPasteControlFactory
+
+- (instancetype)initWithCallback:(void (^)(void))callback {
+  if ((self = [super init])) {
+    _callback = callback;
+  }
+  return self;
+}
+
+- (NSObject<FlutterPlatformView>*)createWithFrame:(CGRect)frame
+                                   viewIdentifier:(int64_t)viewId
+                                        arguments:(id)args {
+  return [[FLTPasteControl alloc] initWithFrame:frame callback:_callback];
+}
+
 @end

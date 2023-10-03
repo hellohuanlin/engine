@@ -9,6 +9,7 @@
 
 #import "flutter/shell/platform/common/text_editing_delta.h"
 #import "flutter/shell/platform/darwin/common/framework/Headers/FlutterChannels.h"
+#import "flutter/shell/platform/darwin/ios/framework/Headers/FlutterPlatformViews.h"
 #import "flutter/shell/platform/darwin/ios/framework/Source/FlutterIndirectScribbleDelegate.h"
 #import "flutter/shell/platform/darwin/ios/framework/Source/FlutterKeySecondaryResponder.h"
 #import "flutter/shell/platform/darwin/ios/framework/Source/FlutterTextInputDelegate.h"
@@ -56,6 +57,7 @@ typedef NS_ENUM(NSInteger, FlutterScribbleInteractionStatus) {
  */
 - (void)setUpIndirectScribbleInteraction:(id<FlutterViewResponder>)viewResponder;
 - (void)resetViewResponder;
+- (void)securePaste;
 
 @end
 
@@ -168,6 +170,13 @@ FLUTTER_DARWIN_EXPORT
 
 @interface UIView (FindFirstResponder)
 @property(nonatomic, readonly) id flutterFirstResponder;
+@end
+
+@interface FLTPasteControlFactory : NSObject <FlutterPlatformViewFactory>
+@property(nonatomic, copy) void (^callback)(void);
+
+- (instancetype)initWithCallback:(void (^)(void))callback;
+
 @end
 
 #endif  // SHELL_PLATFORM_IOS_FRAMEWORK_SOURCE_FLUTTERTEXTINPUTPLUGIN_H_
