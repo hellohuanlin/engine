@@ -792,6 +792,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 // This is cleared at the start of each keyboard interaction. (Enter a character, delete a character
 // etc)
 @property(nonatomic, copy) NSString* temporarilyDeletedComposedCharacter;
+@property(nonatomic, assign) CGRect editMenuTargetRect;
 
 - (void)setEditableTransform:(NSArray*)matrix;
 @end
@@ -871,12 +872,15 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   return [UIMenu menuWithChildren:suggestedActions];
 }
 
-- (void)showNativeEditMenuWithPoint:(CGPoint)point
-                     arrowDirection:(UIEditMenuArrowDirection)arrowDirection
-    API_AVAILABLE(ios(16.0)) {
-  UIEditMenuConfiguration* config = [UIEditMenuConfiguration configurationWithIdentifier:nil
-                                                                             sourcePoint:point];
-  config.preferredArrowDirection = arrowDirection;
+- (CGRect)editMenuInteraction:(UIEditMenuInteraction*)interaction
+    targetRectForConfiguration:(UIEditMenuConfiguration*)configuration API_AVAILABLE(ios(16.0)) {
+  return _editMenuTargetRect;
+}
+
+- (void)showNativeEditMenuWithTargetRect:(CGRect)targetRect API_AVAILABLE(ios(16.0)) {
+  _editMenuTargetRect = targetRect;
+  UIEditMenuConfiguration* config =
+      [UIEditMenuConfiguration configurationWithIdentifier:nil sourcePoint:CGPointZero];
   [_editMenuInteraction presentEditMenuWithConfiguration:config];
 }
 
@@ -2539,10 +2543,9 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 
 - (void)showNativeEditMenu:(NSDictionary*)dictionary {
   if (@available(iOS 16.0, *)) {
-    // TODO: get point and arrowDirection from args
-    CGPoint point = CGPointMake(100, 100);
-    UIEditMenuArrowDirection arrowDirection = UIEditMenuArrowDirectionUp;
-    [_activeView showNativeEditMenuWithPoint:point arrowDirection:arrowDirection];
+    // TODO: get targetRect from args
+    CGRect targetRect = CGRectMake(100, 100, 100, 100);
+    [_activeView showNativeEditMenuWithTargetRect:targetRect];
   }
 }
 
