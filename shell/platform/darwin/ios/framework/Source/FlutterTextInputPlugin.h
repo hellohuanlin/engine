@@ -128,7 +128,8 @@ API_AVAILABLE(ios(13.0)) @interface FlutterTextPlaceholder : UITextPlaceholder
 #if FLUTTER_RUNTIME_MODE == FLUTTER_RUNTIME_MODE_DEBUG
 FLUTTER_DARWIN_EXPORT
 #endif
-@interface FlutterTextInputView : UIView <UITextInput, UIScribbleInteractionDelegate>
+@interface FlutterTextInputView
+    : UIView <UITextInput, UIScribbleInteractionDelegate, UIEditMenuInteractionDelegate>
 
 // UITextInput
 @property(nonatomic, readonly) NSMutableString* text;
@@ -158,6 +159,9 @@ FLUTTER_DARWIN_EXPORT
 @property(nonatomic, weak) id<FlutterViewResponder> viewResponder;
 @property(nonatomic) FlutterScribbleFocusStatus scribbleFocusStatus;
 @property(nonatomic, strong) NSArray<FlutterTextSelectionRect*>* selectionRects;
+
+@property(nonatomic, strong) UIEditMenuInteraction* editMenuInteraction API_AVAILABLE(ios(16.0));
+
 - (void)resetScribbleInteractionStatusIfEnding;
 - (BOOL)isScribbleAvailable;
 

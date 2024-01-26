@@ -44,6 +44,7 @@ static NSString* const kSetEditingStateMethod = @"TextInput.setEditingState";
 static NSString* const kClearClientMethod = @"TextInput.clearClient";
 static NSString* const kSetEditableSizeAndTransformMethod =
     @"TextInput.setEditableSizeAndTransform";
+static NSString* const kShowNativeEditMenu = @"TextInput.showNativeEditMenu";
 static NSString* const kSetMarkedTextRectMethod = @"TextInput.setMarkedTextRect";
 static NSString* const kFinishAutofillContextMethod = @"TextInput.finishAutofillContext";
 // TODO(justinmc): Remove the TextInput method constant when the framework has
@@ -856,7 +857,27 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
     }
   }
 
+  if (@available(iOS 16.0, *)) {
+    _editMenuInteraction = [[UIEditMenuInteraction alloc] initWithDelegate:self];
+    [self addInteraction:_editMenuInteraction];
+  }
+
   return self;
+}
+
+- (UIMenu*)editMenuInteraction:(UIEditMenuInteraction*)interaction
+          menuForConfiguration:(UIEditMenuConfiguration*)configuration
+              suggestedActions:(NSArray<UIMenuElement*>*)suggestedActions API_AVAILABLE(ios(16.0)) {
+  return [UIMenu menuWithChildren:suggestedActions];
+}
+
+- (void)showNativeEditMenuWithPoint:(CGPoint)point
+                     arrowDirection:(UIEditMenuArrowDirection)arrowDirection
+    API_AVAILABLE(ios(16.0)) {
+  UIEditMenuConfiguration* config = [UIEditMenuConfiguration configurationWithIdentifier:nil
+                                                                             sourcePoint:point];
+  config.preferredArrowDirection = arrowDirection;
+  [_editMenuInteraction presentEditMenuWithConfiguration:config];
 }
 
 - (void)configureWithDictionary:(NSDictionary*)configuration {
@@ -1149,9 +1170,9 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   }
   if (action == @selector(paste:)) {
     // Forbid pasting images, memojis, or other non-string content.
-    return [UIPasteboard generalPasteboard].string != nil;
+    // hasStrings does not require paste permission
+    return [UIPasteboard.generalPasteboard hasStrings];
   }
-
   return [super canPerformAction:action withSender:sender];
 }
 
@@ -2375,6 +2396,9 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   } else if ([method isEqualToString:kSetEditableSizeAndTransformMethod]) {
     [self setEditableSizeAndTransform:args];
     result(nil);
+  } else if ([method isEqualToString:kShowNativeEditMenu]) {
+    [self showNativeEditMenu:args];
+    result(nil);
   } else if ([method isEqualToString:kSetMarkedTextRectMethod]) {
     [self updateMarkedRect:args];
     result(nil);
@@ -2511,6 +2535,15 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   }
   _keyboardViewContainer.layer.zPosition = NSIntegerMax;
   _keyboardViewContainer.frame = _keyboardRect;
+}
+
+- (void)showNativeEditMenu:(NSDictionary*)dictionary {
+  if (@available(iOS 16.0, *)) {
+    // TODO: get point and arrowDirection from args
+    CGPoint point = CGPointMake(100, 100);
+    UIEditMenuArrowDirection arrowDirection = UIEditMenuArrowDirectionUp;
+    [_activeView showNativeEditMenuWithPoint:point arrowDirection:arrowDirection];
+  }
 }
 
 - (void)setEditableSizeAndTransform:(NSDictionary*)dictionary {
