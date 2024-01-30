@@ -44,7 +44,7 @@ static NSString* const kSetEditingStateMethod = @"TextInput.setEditingState";
 static NSString* const kClearClientMethod = @"TextInput.clearClient";
 static NSString* const kSetEditableSizeAndTransformMethod =
     @"TextInput.setEditableSizeAndTransform";
-static NSString* const kShowNativeEditMenu = @"TextInput.showNativeEditMenu";
+static NSString* const kShowSystemContextMenuMethod = @"TextInput.showSystemContextMenu";
 static NSString* const kSetMarkedTextRectMethod = @"TextInput.setMarkedTextRect";
 static NSString* const kFinishAutofillContextMethod = @"TextInput.finishAutofillContext";
 // TODO(justinmc): Remove the TextInput method constant when the framework has
@@ -877,7 +877,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   return _editMenuTargetRect;
 }
 
-- (void)showNativeEditMenuWithTargetRect:(CGRect)targetRect API_AVAILABLE(ios(16.0)) {
+- (void)showEditMenuWithTargetRect:(CGRect)targetRect API_AVAILABLE(ios(16.0)) {
   _editMenuTargetRect = targetRect;
   UIEditMenuConfiguration* config =
       [UIEditMenuConfiguration configurationWithIdentifier:nil sourcePoint:CGPointZero];
@@ -2400,8 +2400,8 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   } else if ([method isEqualToString:kSetEditableSizeAndTransformMethod]) {
     [self setEditableSizeAndTransform:args];
     result(nil);
-  } else if ([method isEqualToString:kShowNativeEditMenu]) {
-    [self showNativeEditMenu:args];
+  } else if ([method isEqualToString:kShowSystemContextMenuMethod]) {
+    [self showEditMenu:args];
     result(nil);
   } else if ([method isEqualToString:kSetMarkedTextRectMethod]) {
     [self updateMarkedRect:args];
@@ -2541,11 +2541,14 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   _keyboardViewContainer.frame = _keyboardRect;
 }
 
-- (void)showNativeEditMenu:(NSDictionary*)dictionary {
+- (void)showEditMenu:(NSDictionary*)dictionary {
   if (@available(iOS 16.0, *)) {
-    // TODO: get targetRect from args
-    CGRect targetRect = CGRectMake(100, 100, 100, 100);
-    [_activeView showNativeEditMenuWithTargetRect:targetRect];
+    NSDictionary<NSString*, NSNumber*>* encodedTargetRect = dictionary[@"target_rect"];
+    CGRect globalTargetRect = CGRectMake(
+        [encodedTargetRect[@"x"] doubleValue], [encodedTargetRect[@"y"] doubleValue],
+        [encodedTargetRect[@"width"] doubleValue], [encodedTargetRect[@"height"] doubleValue]);
+    CGRect localTargetRect = [self.hostView convertRect:globalTargetRect toView:_activeView];
+    [_activeView showEditMenuWithTargetRect:localTargetRect];
   }
 }
 
