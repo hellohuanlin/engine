@@ -881,7 +881,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   _editMenuTargetRect = targetRect;
   UIEditMenuConfiguration* config =
       [UIEditMenuConfiguration configurationWithIdentifier:nil sourcePoint:CGPointZero];
-  [_editMenuInteraction presentEditMenuWithConfiguration:config];
+  [self.editMenuInteraction presentEditMenuWithConfiguration:config];
 }
 
 - (void)configureWithDictionary:(NSDictionary*)configuration {
@@ -2547,8 +2547,8 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
     CGRect globalTargetRect = CGRectMake(
         [encodedTargetRect[@"x"] doubleValue], [encodedTargetRect[@"y"] doubleValue],
         [encodedTargetRect[@"width"] doubleValue], [encodedTargetRect[@"height"] doubleValue]);
-    CGRect localTargetRect = [self.hostView convertRect:globalTargetRect toView:_activeView];
-    [_activeView showEditMenuWithTargetRect:localTargetRect];
+    CGRect localTargetRect = [self.hostView convertRect:globalTargetRect toView:self.activeView];
+    [self.activeView showEditMenuWithTargetRect:localTargetRect];
   }
 }
 
