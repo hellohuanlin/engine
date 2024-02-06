@@ -1176,6 +1176,9 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
     // Forbid pasting images, memojis, or other non-string content.
     // hasStrings does not require paste permission
     return [UIPasteboard.generalPasteboard hasStrings];
+  } else if (action == @selector(copy:) || action == @selector(cut:) ||
+             action == @selector(delete:)) {
+    return [self textInRange:_selectedTextRange].length > 0;
   }
   return [super canPerformAction:action withSender:sender];
 }
