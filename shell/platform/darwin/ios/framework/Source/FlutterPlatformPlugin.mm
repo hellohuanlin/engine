@@ -158,10 +158,10 @@ static void SetStatusBarStyleForSharedApplication(UIStatusBarStyle style) {
 }
 
 - (void)showSystemContextMenu:(NSDictionary*)args {
-    if (@available(iOS 16.0, *)) {
-      FlutterTextInputPlugin* textInputPlugin = [_engine.get() textInputPlugin];
-      [textInputPlugin showEditMenu:args];
-    }
+  if (@available(iOS 16.0, *)) {
+    FlutterTextInputPlugin* textInputPlugin = [_engine.get() textInputPlugin];
+    [textInputPlugin showEditMenu:args];
+  }
 }
 
 - (void)showShareViewController:(NSString*)content {

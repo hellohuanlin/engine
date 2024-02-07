@@ -2126,7 +2126,7 @@ static flutter::PointerData::DeviceKind DeviceKindFromTouchType(UITouch* touch) 
     @"platformBrightness" : [self brightnessMode],
     @"platformContrast" : [self contrastMode],
     @"nativeSpellCheckServiceDefined" : @true,
-    @"supportsShowingSystemContextMenu": @([self supportsShowingSystemContextMenu])
+    @"supportsShowingSystemContextMenu" : @([self supportsShowingSystemContextMenu])
   }];
 }
 

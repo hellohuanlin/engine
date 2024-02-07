@@ -320,7 +320,7 @@ final class EngineFlutterWindow extends EngineFlutterView implements ui.Singleto
 
   @override
   bool get supportsShowingSystemContextMenu => platformDispatcher.supportsShowingSystemContextMenu;
-  
+
   @override
   bool get brieflyShowPassword => platformDispatcher.brieflyShowPassword;
 
