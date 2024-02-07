@@ -44,7 +44,6 @@ static NSString* const kSetEditingStateMethod = @"TextInput.setEditingState";
 static NSString* const kClearClientMethod = @"TextInput.clearClient";
 static NSString* const kSetEditableSizeAndTransformMethod =
     @"TextInput.setEditableSizeAndTransform";
-static NSString* const kShowSystemContextMenuMethod = @"TextInput.showSystemContextMenu";
 static NSString* const kSetMarkedTextRectMethod = @"TextInput.setMarkedTextRect";
 static NSString* const kFinishAutofillContextMethod = @"TextInput.finishAutofillContext";
 // TODO(justinmc): Remove the TextInput method constant when the framework has
@@ -2403,9 +2402,6 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   } else if ([method isEqualToString:kSetEditableSizeAndTransformMethod]) {
     [self setEditableSizeAndTransform:args];
     result(nil);
-  } else if ([method isEqualToString:kShowSystemContextMenuMethod]) {
-    [self showEditMenu:args];
-    result(nil);
   } else if ([method isEqualToString:kSetMarkedTextRectMethod]) {
     [self updateMarkedRect:args];
     result(nil);
@@ -2544,15 +2540,13 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   _keyboardViewContainer.frame = _keyboardRect;
 }
 
-- (void)showEditMenu:(NSDictionary*)dictionary {
-  if (@available(iOS 16.0, *)) {
-    NSDictionary<NSString*, NSNumber*>* encodedTargetRect = dictionary[@"target_rect"];
-    CGRect globalTargetRect = CGRectMake(
-        [encodedTargetRect[@"x"] doubleValue], [encodedTargetRect[@"y"] doubleValue],
-        [encodedTargetRect[@"width"] doubleValue], [encodedTargetRect[@"height"] doubleValue]);
-    CGRect localTargetRect = [self.hostView convertRect:globalTargetRect toView:self.activeView];
-    [self.activeView showEditMenuWithTargetRect:localTargetRect];
-  }
+- (void)showEditMenu:(NSDictionary*)args API_AVAILABLE(ios(16.0)) {
+  NSDictionary<NSString*, NSNumber*>* encodedTargetRect = args[@"targetRect"];
+  CGRect globalTargetRect = CGRectMake(
+      [encodedTargetRect[@"x"] doubleValue], [encodedTargetRect[@"y"] doubleValue],
+      [encodedTargetRect[@"width"] doubleValue], [encodedTargetRect[@"height"] doubleValue]);
+  CGRect localTargetRect = [self.hostView convertRect:globalTargetRect toView:self.activeView];
+  [self.activeView showEditMenuWithTargetRect:localTargetRect];
 }
 
 - (void)setEditableSizeAndTransform:(NSDictionary*)dictionary {

@@ -2879,13 +2879,8 @@ FLUTTER_ASSERT_ARC
 
     NSDictionary<NSString*, NSNumber*>* encodedTargetRect =
         @{@"x" : @(0), @"y" : @(0), @"width" : @(0), @"height" : @(0)};
-    FlutterMethodCall* showNativeEditMenuCall =
-        [FlutterMethodCall methodCallWithMethodName:@"TextInput.showSystemContextMenu"
-                                          arguments:@{@"target_rect" : encodedTargetRect}];
-    [myInputPlugin handleMethodCall:showNativeEditMenuCall
-                             result:^(id _Nullable result){
-                                 // No-op
-                             }];
+
+    [myInputPlugin showEditMenu:@{@"targetRect" : encodedTargetRect}];
     [self waitForExpectations:@[ expectation ] timeout:1.0];
   }
 }
@@ -2921,13 +2916,7 @@ FLUTTER_ASSERT_ARC
     NSDictionary<NSString*, NSNumber*>* encodedTargetRect =
         @{@"x" : @(100), @"y" : @(200), @"width" : @(300), @"height" : @(400)};
 
-    FlutterMethodCall* showNativeEditMenuCall =
-        [FlutterMethodCall methodCallWithMethodName:@"TextInput.showSystemContextMenu"
-                                          arguments:@{@"target_rect" : encodedTargetRect}];
-    [myInputPlugin handleMethodCall:showNativeEditMenuCall
-                             result:^(id _Nullable result){
-                                 // No-op
-                             }];
+    [myInputPlugin showEditMenu:@{@"targetRect" : encodedTargetRect}];
     [self waitForExpectations:@[ expectation ] timeout:1.0];
 
     CGRect targetRect =

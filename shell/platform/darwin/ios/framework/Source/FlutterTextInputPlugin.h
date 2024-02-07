@@ -60,6 +60,7 @@ typedef NS_ENUM(NSInteger, FlutterScribbleInteractionStatus) {
  */
 - (void)setUpIndirectScribbleInteraction:(id<FlutterViewResponder>)viewResponder;
 - (void)resetViewResponder;
+- (void)showEditMenu:(NSDictionary*)args API_AVAILABLE(ios(16.0));
 
 @end
 
@@ -161,7 +162,6 @@ FLUTTER_DARWIN_EXPORT
 @property(nonatomic, strong) NSArray<FlutterTextSelectionRect*>* selectionRects;
 
 @property(nonatomic, strong) UIEditMenuInteraction* editMenuInteraction API_AVAILABLE(ios(16.0));
-
 - (void)resetScribbleInteractionStatusIfEnding;
 - (BOOL)isScribbleAvailable;
 
