@@ -792,6 +792,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
 // etc)
 @property(nonatomic, copy) NSString* temporarilyDeletedComposedCharacter;
 @property(nonatomic, assign) CGRect editMenuTargetRect;
+@property(nonatomic, strong) NSArray<NSDictionary*>* editMenuItems;
 
 - (void)setEditableTransform:(NSArray*)matrix;
 @end
@@ -865,10 +866,82 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   return self;
 }
 
+- (UIKeyCommand*)dfs:(SEL)selector element:(UIMenuElement*)element API_AVAILABLE(ios(16.0)) {
+  if ([element isKindOfClass:UIKeyCommand.class]) {
+    UIKeyCommand* cmd = (UIKeyCommand*)element;
+    return cmd.action == selector ? cmd : nil;
+  } else if ([element isKindOfClass:UIMenu.class]) {
+    NSArray<UIMenuElement*>* children = ((UIMenu*)element).children;
+    for (UIMenuElement* child in children) {
+      UIKeyCommand* result = [self dfs:selector element:child];
+      if (result) {
+        return result;
+      }
+    }
+    return nil;
+  } else {
+    return nil;
+  }
+}
+
+- (UIKeyCommand*)searchCommand:(SEL)selector
+            inSuggestedActions:(NSArray<UIMenuElement*>*)suggestedActions API_AVAILABLE(ios(16.0)) {
+  for (UIMenuElement* action in suggestedActions) {
+    UIKeyCommand* result = [self dfs:selector element:action];
+    if (result) {
+      return result;
+    }
+  }
+  return nil;
+}
+
+- (void)searchWeb {
+  NSLog(@"put search web logic here");
+}
+
 - (UIMenu*)editMenuInteraction:(UIEditMenuInteraction*)interaction
           menuForConfiguration:(UIEditMenuConfiguration*)configuration
               suggestedActions:(NSArray<UIMenuElement*>*)suggestedActions API_AVAILABLE(ios(16.0)) {
-  return [UIMenu menuWithChildren:suggestedActions];
+  NSMutableArray* items = [NSMutableArray array];
+  for (NSDictionary<NSString*, NSString*>* encodedItem in _editMenuItems) {
+    if ([encodedItem[@"type"] isEqualToString:@"default"]) {
+      if ([encodedItem[@"action"] isEqualToString:@"copy"]) {
+        UIKeyCommand* copyCommand = [self searchCommand:@selector(copy:)
+                                     inSuggestedActions:suggestedActions];
+        [items addObject:copyCommand];
+      } else if ([encodedItem[@"action"] isEqualToString:@"paste"]) {
+        UIKeyCommand* pasteCommand = [self searchCommand:@selector(paste:)
+                                      inSuggestedActions:suggestedActions];
+        [items addObject:pasteCommand];
+      } else if ([encodedItem[@"action"] isEqualToString:@"cut"]) {
+        UIKeyCommand* pasteCommand = [self searchCommand:@selector(cut:)
+                                      inSuggestedActions:suggestedActions];
+        [items addObject:pasteCommand];
+      } else if ([encodedItem[@"action"] isEqualToString:@"selectAll"]) {
+        UIKeyCommand* pasteCommand = [self searchCommand:@selector(selectAll:)
+                                      inSuggestedActions:suggestedActions];
+        [items addObject:pasteCommand];
+      } else if ([encodedItem[@"action"] isEqualToString:@"searchWeb"]) {
+        UICommand* searchWebCommand = [UICommand commandWithTitle:@"Search Web"
+                                                            image:nil
+                                                           action:@selector(searchWeb)
+                                                     propertyList:nil];
+        [items addObject:searchWebCommand];
+      }
+    } else if ([encodedItem[@"type"] isEqualToString:@"custom"]) {
+      NSString* title = encodedItem[@"title"];
+      NSString* callbackID = encodedItem[@"callbackId"];
+      UIAction* action = [UIAction
+          actionWithTitle:title
+                    image:nil
+               identifier:nil
+                  handler:^(UIAction* action) {
+                    NSLog(@"put logic to call method channel with callback ID %@", callbackID);
+                  }];
+      [items addObject:action];
+    }
+  }
+  return [UIMenu menuWithChildren:items];
 }
 
 - (CGRect)editMenuInteraction:(UIEditMenuInteraction*)interaction
@@ -876,8 +949,10 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
   return _editMenuTargetRect;
 }
 
-- (void)showEditMenuWithTargetRect:(CGRect)targetRect API_AVAILABLE(ios(16.0)) {
+- (void)showEditMenuWithTargetRect:(CGRect)targetRect
+                             items:(NSArray<NSDictionary*>*)items API_AVAILABLE(ios(16.0)) {
   _editMenuTargetRect = targetRect;
+  _editMenuItems = items;
   UIEditMenuConfiguration* config =
       [UIEditMenuConfiguration configurationWithIdentifier:nil sourcePoint:CGPointZero];
   [self.editMenuInteraction presentEditMenuWithConfiguration:config];
@@ -2546,7 +2621,7 @@ static BOOL IsSelectionRectBoundaryCloserToPoint(CGPoint point,
       [encodedTargetRect[@"x"] doubleValue], [encodedTargetRect[@"y"] doubleValue],
       [encodedTargetRect[@"width"] doubleValue], [encodedTargetRect[@"height"] doubleValue]);
   CGRect localTargetRect = [self.hostView convertRect:globalTargetRect toView:self.activeView];
-  [self.activeView showEditMenuWithTargetRect:localTargetRect];
+  [self.activeView showEditMenuWithTargetRect:localTargetRect items:args[@"items"]];
 }
 
 - (void)setEditableSizeAndTransform:(NSDictionary*)dictionary {
