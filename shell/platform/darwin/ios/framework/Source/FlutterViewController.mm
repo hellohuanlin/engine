@@ -809,6 +809,10 @@ static void SendFakeTouchEvent(UIScreen* screen,
   }
 
   [super viewDidLoad];
+
+  UIView* dummyView = [[[UIView alloc] initWithFrame:CGRectMake(0, 0, 30, 30)] autorelease];
+  dummyView.backgroundColor = UIColor.redColor;
+  [self.view addSubview:dummyView];
 }
 
 - (void)addInternalPlugins {
