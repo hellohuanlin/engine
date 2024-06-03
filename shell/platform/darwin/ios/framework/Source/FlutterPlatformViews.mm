@@ -700,7 +700,7 @@ bool FlutterPlatformViewsController::SubmitFrame(GrDirectContext* gr_context,
       int64_t current_platform_view_id = composition_order_[j - 1];
       SkRect platform_view_rect = GetPlatformViewRect(current_platform_view_id);
       std::vector<SkIRect> intersection_rects = slice->region(platform_view_rect).getRects();
-      const SkIRect rounded_in_platform_view_rect = platform_view_rect.roundIn();
+      // const SkIRect rounded_in_platform_view_rect = platform_view_rect.roundIn();
       // Ignore intersections of single width/height on the edge of the platform view.
       // This is to address the following performance issue when interleaving adjacent
       // platform views and layers:
@@ -711,15 +711,15 @@ bool FlutterPlatformViewsController::SubmitFrame(GrDirectContext* gr_context,
       // Rounding in platform view rect will result in missing pixel on the intersection edge.
       // Rounding in layer rect will result in missing pixel on the edge of the layer on top
       // of the platform view.
-      for (auto it = intersection_rects.begin(); it != intersection_rects.end(); /*no-op*/) {
-        // If intersection_rect does not intersect with the *rounded in* platform
-        // view rect, then the intersection must be a single pixel width (or height) on edge.
-        if (!SkIRect::Intersects(*it, rounded_in_platform_view_rect)) {
-          it = intersection_rects.erase(it);
-        } else {
-          ++it;
-        }
-      }
+      // for (auto it = intersection_rects.begin(); it != intersection_rects.end(); /*no-op*/) {
+      //   // If intersection_rect does not intersect with the *rounded in* platform
+      //   // view rect, then the intersection must be a single pixel width (or height) on edge.
+      //   if (!SkIRect::Intersects(*it, rounded_in_platform_view_rect)) {
+      //     it = intersection_rects.erase(it);
+      //   } else {
+      //     ++it;
+      //   }
+      // }
 
       auto allocation_size = intersection_rects.size();
 
